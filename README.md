@@ -1,4 +1,4 @@
-# SkillSprint (v2) - Demo-ready
+# SkillSprint (Java) - Demo-ready
 
 This version includes:
 - Dashboard with quick progress overview
