@@ -1,3 +1,3 @@
-# SkillSprint Full Project
+# SkillSprint OOPS Mini Project
 
 
