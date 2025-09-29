@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Add Skill - SkillSprint</title><link rel="stylesheet" th:href="@{/css/style.css}"></head>
+<body>
+  <header><h1>SkillSprint</h1><nav><a th:href="@{/dashboard}">Dashboard</a> | <a th:href="@{/skills}">Skills</a></nav></header>
+  <h2>Add a Skill</h2>
+  <form th:action="@{/skills/add}" method="post">
+    <label>Title: <input name="title" required></label><br>
+    <label>Description:<br><textarea name="description" required></textarea></label><br>
+    <button type="submit">Add</button>
+  </form>
+</body>
+</html>

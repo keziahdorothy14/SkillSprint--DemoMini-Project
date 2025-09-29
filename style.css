@@ -1,0 +1,9 @@
+body { font-family: Arial, sans-serif; margin: 20px; }
+header { display:flex; justify-content:space-between; align-items:center; }
+.grid { display:flex; gap:10px; flex-wrap:wrap; }
+.card { border:1px solid #ddd; padding:10px; width:220px; border-radius:6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.error { color: red; }
+.bar { width: 300px; background: #eee; border-radius: 6px; overflow: hidden; height: 14px; margin-top:6px; }
+.fill { height: 14px; background: linear-gradient(90deg, #6aa, #48a); }
+table { border-collapse: collapse; width: 80%; }
+table, th, td { border: 1px solid #ccc; padding: 8px; }

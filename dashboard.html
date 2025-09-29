@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard - SkillSprint</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+  <header>
+    <h1>SkillSprint</h1>
+    <nav>
+      <a th:href="@{/dashboard}">Dashboard</a> |
+      <a th:href="@{/skills}">Skills</a> |
+      <a th:href="@{/profile}">Profile</a> |
+      <a th:href="@{/auth/logout}">Logout</a>
+    </nav>
+  </header>
+  <main>
+    <h2>Welcome, <span th:text="${user.username}">User</span></h2>
+    <section>
+      <h3>Your progress</h3>
+      <div th:if="${progress.size()}==0">No progress yet. Start a skill below.</div>
+      <ul>
+        <li th:each="p : ${progress}">
+          <span th:text="${#lists.find(skills, s -> s.id == p.skillId)?.title}"></span> - <b th:text="${p.percent}"></b>%
+          <div class="bar"><div class="fill" th:style="${'width:' + p.percent + '%'}"></div></div>
+        </li>
+      </ul>
+    </section>
+    <section>
+      <h3>Available features</h3>
+      <ul>
+        <li><a th:href="@{/skills}">Browse Skills</a></li>
+        <li><a th:href="@{/skills/add}">Add a Skill</a></li>
+        <li><a th:href="@{/profile}">View Profile & Progress</a></li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>

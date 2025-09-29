@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Register - SkillSprint</title><link rel="stylesheet" th:href="@{/css/style.css}"></head>
+<body>
+  <header><h1>SkillSprint</h1></header>
+  <h2>Register</h2>
+  <form th:action="@{/auth/register}" method="post">
+    <label>Username: <input name="username" required></label><br>
+    <label>Password: <input type="password" name="password" required></label><br>
+    <button type="submit">Register</button>
+  </form>
+</body>
+</html>

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title th:text="${skill.title}">Skill</title><link rel="stylesheet" th:href="@{/css/style.css}"></head>
+<body>
+  <header><h1>SkillSprint</h1><nav><a th:href="@{/dashboard}">Dashboard</a> | <a th:href="@{/skills}">Skills</a></nav></header>
+  <a th:href="@{/skills}">Back to skills</a>
+  <h2 th:text="${skill.title}"></h2>
+  <p th:text="${skill.description}"></p>
+  <div>
+    <p>Quick exercise: mark progress</p>
+    <form th:action="@{/api/progress}" method="post">
+      <input type="hidden" name="skillId" th:value="${skill.id}"/>
+      <label>Progress (0-100): <input name="percent" value="10" min="0" max="100"/></label>
+      <button type="submit">Save</button>
+    </form>
+  </div>
+</body>
+</html>

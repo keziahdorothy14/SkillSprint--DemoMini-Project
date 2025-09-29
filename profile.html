@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Profile - SkillSprint</title><link rel="stylesheet" th:href="@{/css/style.css}"></head>
+<body>
+  <header>
+    <h1>SkillSprint</h1>
+    <nav>
+      <a th:href="@{/dashboard}">Dashboard</a> | <a th:href="@{/skills}">Skills</a> | <a th:href="@{/auth/logout}">Logout</a>
+    </nav>
+  </header>
+  <main>
+    <h2>Profile: <span th:text="${user.username}"></span></h2>
+    <h3>Progress</h3>
+    <table>
+      <thead><tr><th>Skill</th><th>Progress</th></tr></thead>
+      <tbody>
+        <tr th:each="p : ${progress}">
+          <td th:text="${#lists.find(skills, s -> s.id == p.skillId)?.title}"></td>
+          <td><span th:text="${p.percent}"></span>%</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>If a skill is missing, go to <a th:href="@{/skills}">Skills</a> to add it.</p>
+  </main>
+</body>
+</html>

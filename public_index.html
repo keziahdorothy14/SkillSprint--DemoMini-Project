@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>SkillSprint - Welcome</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+  <header>
+    <h1>SkillSprint</h1>
+    <nav>
+      <a th:href="@{/}">Home</a> |
+      <a th:href="@{/auth/login}">Login</a> |
+      <a th:href="@{/auth/register}">Register</a>
+    </nav>
+  </header>
+  <main>
+    <h2>Welcome to SkillSprint</h2>
+    <p>A simple skill development demo application.</p>
+    <p>To quickly see the demo dashboard: <a th:href="@{/demo/create}">Click here to create demo session</a></p>
+  </main>
+</body>
+</html>

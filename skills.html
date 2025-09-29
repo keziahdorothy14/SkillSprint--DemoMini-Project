@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Skills - SkillSprint</title><link rel="stylesheet" th:href="@{/css/style.css}"></head>
+<body>
+  <header><h1>SkillSprint</h1><nav><a th:href="@{/dashboard}">Dashboard</a> | <a th:href="@{/skills/add}">Add Skill</a> | <a th:href="@{/auth/logout}">Logout</a></nav></header>
+  <h2>All Skills</h2>
+  <ul>
+    <li th:each="s : ${skills}">
+      <a th:href="@{'/skills/' + ${s.id}}" th:text="${s.title}"></a> - <span th:text="${s.description}"></span>
+    </li>
+  </ul>
+</body>
+</html>
