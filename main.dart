@@ -1,6 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await ProgressController.init(); // load saved progress
   runApp(SkillSprintApp());
 }
 
@@ -1130,23 +1134,46 @@ Key takeaways:
   }
 }
 
-// -------------------- PROGRESS CONTROLLER --------------------
+// -------------------- PROGRESS CONTROLLER (shared_preferences persistence) --------------------
 class ProgressController {
-  // derive lessons per skill from LessonContent (keeps single source of truth)
   static final Map<String, int> lessonsPerSkill = {
-    for (var entry in LessonContent.lessons.entries) entry.key: entry.value.length
+    for (var e in LessonContent.lessons.entries) e.key: e.value.length
   };
 
-  static final Map<String, Set<int>> completedLessons = {};
-
-  // mark last visited (not strictly required but kept for backwards compatibility)
+  static Map<String, Set<int>> completedLessons = {};
   static String? lastSkill;
   static int? lastLesson;
+
+  static Future<void> init() async {
+    final prefs = await SharedPreferences.getInstance();
+    final stored = prefs.getString('completedLessons');
+    if (stored != null) {
+      try {
+        final Map<String, dynamic> decoded = jsonDecode(stored);
+        completedLessons = {};
+        decoded.forEach((skill, listDyn) {
+          final arr = (listDyn as List<dynamic>).map((e) => e as int).toList();
+          completedLessons[skill] = arr.toSet();
+        });
+      } catch (_) {
+        completedLessons = {};
+      }
+    } else {
+      completedLessons = {};
+    }
+  }
+
+  static Future<void> _save() async {
+    final prefs = await SharedPreferences.getInstance();
+    final Map<String, List<int>> toSave = {};
+    completedLessons.forEach((k, v) => toSave[k] = v.toList());
+    await prefs.setString('completedLessons', jsonEncode(toSave));
+  }
 
   static double getProgress(String skill) {
     final total = lessonsPerSkill[skill] ?? 0;
     final done = completedLessons[skill]?.length ?? 0;
-    return total == 0 ? 0 : done / total;
+    return total == 0 ? 0.0 : done / total;
   }
 
   static void completeLesson(String skill, int lesson) {
@@ -1154,20 +1181,27 @@ class ProgressController {
     completedLessons[skill]!.add(lesson);
     lastSkill = skill;
     lastLesson = lesson;
+    _save();
   }
 
-  // Find the next incomplete lesson across all skills (in the defined order)
   static Map<String, dynamic>? getNextLesson() {
     for (var skill in lessonsPerSkill.keys) {
       final total = lessonsPerSkill[skill]!;
-      final doneSet = completedLessons[skill] ?? <int>{};
+      final done = completedLessons[skill] ?? <int>{};
       for (int i = 1; i <= total; i++) {
-        if (!doneSet.contains(i)) {
+        if (!done.contains(i)) {
           return {"skill": skill, "lesson": i};
         }
       }
     }
-    return null; // all complete
+    return null;
+  }
+
+  static Future<void> resetAll() async {
+    completedLessons.clear();
+    lastSkill = null;
+    lastLesson = null;
+    await _save();
   }
 }
 
@@ -1430,46 +1464,34 @@ class ProfilePage extends StatelessWidget {
 
 // -------------------- PROGRESS PAGE --------------------
 class ProgressPage extends StatelessWidget {
+  ProgressPage({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    final skills = ProgressController.lessonsPerSkill.keys.toList();
-
+    final skills = LessonContent.lessons.keys.toList();
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Color(0xFF1565C0),
-        title: Text("Progress", style: TextStyle(color: Colors.white)),
-      ),
+      appBar: AppBar(title: const Text("Progress", style: TextStyle(color: Colors.white)), backgroundColor: const Color(0xFF1565C0)),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: ListView.separated(
           itemCount: skills.length,
-          separatorBuilder: (_, __) => SizedBox(height: 16),
-          itemBuilder: (context, index) {
-            final skill = skills[index];
-            final progress = ProgressController.getProgress(skill);
-            final done = ProgressController.completedLessons[skill]?.length ?? 0;
-            final total = ProgressController.lessonsPerSkill[skill]!;
+          separatorBuilder: (_, __) => const SizedBox(height: 16),
+          itemBuilder: (context, idx) {
+            final s = skills[idx];
+            final progress = ProgressController.getProgress(s);
+            final done = ProgressController.completedLessons[s]?.length ?? 0;
+            final total = ProgressController.lessonsPerSkill[s] ?? 0;
             return Card(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               elevation: 3,
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(skill, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    SizedBox(height: 10),
-                    LinearProgressIndicator(
-                      value: progress,
-                      color: Color(0xFF1565C0),
-                      backgroundColor: Colors.grey.shade300,
-                      minHeight: 10,
-                    ),
-                    SizedBox(height: 6),
-                    Text("${(progress * 100).toInt()}% completed — $done of $total lessons",
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600])),
-                  ],
-                ),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(s, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 10),
+                  LinearProgressIndicator(value: progress, color: const Color(0xFF1565C0), backgroundColor: Colors.grey.shade300, minHeight: 10),
+                  const SizedBox(height: 6),
+                  Text("${(progress * 100).toInt()}% completed — $done of $total lessons", style: const TextStyle(fontSize: 14, color: Colors.grey)),
+                ]),
               ),
             );
           },
@@ -1691,33 +1713,39 @@ class _LessonPageState extends State<LessonPage> {
     );
   }
 }
-
 // -------------------- SETTINGS PAGE --------------------
 class SettingsPage extends StatelessWidget {
+  SettingsPage({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
+    final isDark = themeNotifier.value == ThemeMode.dark;
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Color(0xFF1565C0),
-        title: Text("Settings", style: TextStyle(color: Colors.white)),
-      ),
+      appBar: AppBar(title: const Text("Settings", style: TextStyle(color: Colors.white)), backgroundColor: const Color(0xFF1565C0)),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            SwitchListTile(
-              title: Text("Dark Mode"),
-              value: themeNotifier.value == ThemeMode.dark,
-              onChanged: (value) {
-                themeNotifier.value = value ? ThemeMode.dark : ThemeMode.light;
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.info, color: Color(0xFF1565C0)),
-              title: Text("App Version: 1.0.0"),
-            ),
-          ],
-        ),
+        child: Column(children: [
+          SwitchListTile(
+            title: const Text("Dark Mode"),
+            value: isDark,
+            onChanged: (val) => themeNotifier.value = val ? ThemeMode.dark : ThemeMode.light,
+            activeColor: const Color(0xFF1565C0),
+          ),
+          const SizedBox(height: 10),
+          ListTile(
+            leading: const Icon(Icons.restart_alt),
+            title: const Text("Reset Progress"),
+            subtitle: const Text("Clears all completed lessons (persistent)"),
+            onTap: () async {
+              await ProgressController.resetAll();
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("All progress has been reset")));
+            },
+          ),
+          const SizedBox(height: 10),
+          ListTile(
+            leading: const Icon(Icons.info, color: Color(0xFF1565C0)),
+            title: const Text("App Version: 1.0.0"),
+          ),
+        ]),
       ),
     );
   }
